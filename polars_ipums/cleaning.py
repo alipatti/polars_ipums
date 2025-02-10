@@ -354,6 +354,7 @@ def create_parquet_dataset(
     print()
 
 
+# TODO: write better tests
 def test_parquet_conversion(
     input_path=Path(
         "/Users/ali/.devpod/agent/contexts/default/"
@@ -403,14 +404,16 @@ def test_parquet_conversion(
     )
 
     # load back into memory
-    df = (
-        pl.scan_parquet(output_path / "**/*.parquet", hive_partitioning=True)
-        .head()
-        .collect()
-    )
+    with pl.StringCache():
+        df = (
+            pl.scan_parquet(output_path / "**/*.parquet", hive_partitioning=True)
+            .head()
+            .collect()
+        )
 
     # check renames worked
     assert all(col in df.columns for col in renames.values())
+    assert "my_education" in df.columns
     assert all(col not in df.columns for col in renames.keys())
 
     # TODO: wirte more tests
